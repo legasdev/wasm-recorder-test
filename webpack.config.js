@@ -3,6 +3,8 @@ const path = require('path');
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 
+const BUNDLE_FOLDER_NAME = 'docs';
+
 module.exports = {
     mode: 'development',
     devtool: 'eval-source-map',
@@ -10,7 +12,7 @@ module.exports = {
         main: path.resolve(__dirname, './src/index.js'),
     },
     output: {
-        path: path.resolve(__dirname, './dist'),
+        path: path.resolve(__dirname, `./${BUNDLE_FOLDER_NAME}`),
         filename: '[name].bundle.js',
         publicPath: '/',
         clean: true,
@@ -22,7 +24,7 @@ module.exports = {
         }
     },
     devServer: {
-        static: './dist',
+        static: `./${BUNDLE_FOLDER_NAME}`,
         hot: true,
     },
     optimization: {
@@ -36,7 +38,7 @@ module.exports = {
             patterns: [
                 {
                     from: path.resolve(__dirname, "src", "styles.css"),
-                    to: path.resolve(__dirname, "dist", "styles.css")
+                    to: path.resolve(__dirname, BUNDLE_FOLDER_NAME, "styles.css")
                 },
             ],
         }),

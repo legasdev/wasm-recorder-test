@@ -14,7 +14,7 @@ module.exports = {
     output: {
         path: path.resolve(__dirname, `./${BUNDLE_FOLDER_NAME}`),
         filename: '[name].bundle.js',
-        publicPath: '/wasm-recorder-test/',
+        publicPath: '/',
         clean: true,
     },
     resolve: {

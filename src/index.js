@@ -1,5 +1,6 @@
 import {
-    Devices, PRESETS_VIDEO_RECORD,
+    Devices,
+    PRESETS_VIDEO_RECORD,
     Record,
     SETTINGS_NAMES,
 } from "./modules/settings";
@@ -7,7 +8,10 @@ import {
     CONSTANTS,
     UTILS,
 } from "./common";
-import {makeRecorder} from "./Recorder";
+import * as Recorder from "./Recorder";
+
+
+let recordQuality = Object.keys(PRESETS_VIDEO_RECORD)[0];
 
 
 async function enableDevices(RecordSettings) {
@@ -60,6 +64,41 @@ function showDeviceSettings(device) {
     $textarea.value = JSON.stringify(capabilities, null, '    ');
 }
 
+function showQualitySettings() {
+    const $select = UTILS.domSearchElement(CONSTANTS.selectQualityRecordSelector);
+
+    $select.innerHTML = '';
+
+    for (const quality of Object.keys(PRESETS_VIDEO_RECORD)) {
+        const $option = UTILS.domCreateElement('option', {
+            value: quality,
+            textContent: quality,
+        });
+        $select.appendChild($option);
+    }
+
+    $select.value = recordQuality;
+    $select.disabled = false;
+
+    $select.addEventListener(CONSTANTS.events.input, (event) => recordQuality = event.target.value);
+}
+
+function addListenersOnButton() {
+    const
+        eventName = CONSTANTS.events.click,
+        handlerStartClick = () => {
+            Recorder.startRecord(CONSTANTS.sliceRecordTimeout);
+            changeActiveButtonStatus(false);
+        },
+        handlerStopClick = () => {
+            Recorder.stopRecord();
+            changeActiveButtonStatus();
+        }
+
+    UTILS.domSearchElement(CONSTANTS.buttonStartRecordSelector).addEventListener(eventName, handlerStartClick);
+    UTILS.domSearchElement(CONSTANTS.buttonStopRecordSelector).addEventListener(eventName, handlerStopClick);
+}
+
 async function main() {
     const
         DevicesSettings = await Object.create(Devices).init(),
@@ -69,10 +108,22 @@ async function main() {
     showDeviceSettings(DevicesSettings.inputVideoDevice);
     const streams = await makeStreamsObject(RecordSettings);
 
-    await RecordSettings.changeQuality(SETTINGS_NAMES.VIDEO_TYPE, PRESETS_VIDEO_RECORD["1080p_2"]);
+    await RecordSettings.changeQuality(SETTINGS_NAMES.VIDEO_TYPE, recordQuality);
     showVideoOnPage(streams[SETTINGS_NAMES.VIDEO_TYPE].track);
-    makeRecorder(streams[SETTINGS_NAMES.VIDEO_TYPE].track);
 
+    const
+        recordVideoWidth = PRESETS_VIDEO_RECORD[recordQuality].width.ideal,
+        recordVideoHeight = PRESETS_VIDEO_RECORD[recordQuality].height.ideal,
+        recordVideoFrameRate = PRESETS_VIDEO_RECORD[recordQuality].frameRate;
+
+    Recorder.makeRecorder(streams[SETTINGS_NAMES.VIDEO_TYPE].track, {
+        width: recordVideoWidth,
+        height: recordVideoHeight,
+        frameRate: recordVideoFrameRate,
+    });
+    addListenersOnButton();
+
+    showQualitySettings();
     changeActiveButtonStatus();
 }
 
